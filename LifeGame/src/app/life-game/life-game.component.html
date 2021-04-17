@@ -28,20 +28,20 @@
     <span>Size:</span>
     <span class="space"></span>
     <mat-form-field class="inputForm">
-      <input matInput type="number" name="width" [(ngModel)]="inputWidth" [formControl]="widthControl">
-      <span matSuffix>cells</span>
+      <input matInput type="number" class="numberInput" [(ngModel)]="inputWidth" [formControl]="widthControl">
+      <span matPrefix>Width</span>
       <mat-error *ngIf="widthControl.errors?.outOfRange">{{ getSizeMessage()}}</mat-error>
     </mat-form-field>
     <span class="space"></span>
     <span>X</span>
     <span class="space"></span>
     <mat-form-field class="inputForm">
-      <input matInput type="number" name="height" [(ngModel)]="inputHeight" [formControl]="heightControl">
-      <span matSuffix>cells</span>
+      <input matInput type="number" class="numberInput" [(ngModel)]="inputHeight" [formControl]="heightControl">
+      <span matPrefix>Height</span>
       <mat-error *ngIf="heightControl.errors?.outOfRange">{{ getSizeMessage()}}</mat-error>
     </mat-form-field>
     <span class="space"></span>
-    <button mat-raised-button class="component"
+    <button mat-raised-button class="component" (click)="applySize()"
       [ngClass]="{hasChanged: (size.width != inputWidth || size.height != inputHeight)}">Resize</button>
   </span>
 </div>

@@ -195,4 +195,21 @@ export class LifeGameComponent implements OnInit {
       this.start();
     }
   }
+
+  applySize() {
+    if (this.widthControl.errors.outOfRange || this.heightControl.errors.outOfRange) {
+      return;
+    }
+
+    this.size = {
+      width: this.inputWidth,
+      height: this.inputHeight
+    };
+
+    this.stop();
+    this.calcCells[this.cellsIndex] = this.newCells();
+    this.calcCells[-1 * this.cellsIndex] = this.newCells();
+    this.cells = this.calcCells[this.cellsIndex];
+
+  }
 }
