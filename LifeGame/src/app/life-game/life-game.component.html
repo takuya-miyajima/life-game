@@ -1,5 +1,39 @@
 <div id="controllPanel" class="controlArea">
-  <button mat-raised-button>Basic</button>
+  <p>Life Game</p>
+  <span class="componentGroup">
+    <button mat-raised-button class="component">Clear</button>
+    <button mat-raised-button class="component">Random</button>
+  </span>
+  <span class="componentGroup">
+    <button mat-raised-button class="component">Start</button>
+    <button mat-raised-button class="component">Stop</button>
+    <button mat-raised-button class="component">Tick</button>
+  </span>
+  <span class="componentGroup">
+    <span>Tick period:</span>
+    <span class="space"></span>
+    <mat-form-field style="width:150px">
+      <input matInput #period type="number">
+      <span matSuffix>msec</span>
+    </mat-form-field>
+  </span>
+  <span class="componentGroup">
+    <span>Size:</span>
+    <span class="space"></span>
+    <mat-form-field style="width:150px">
+      <input matInput #period type="number">
+      <span matSuffix>cells</span>
+    </mat-form-field>
+    <span class="space"></span>
+    <span>X</span>
+    <span class="space"></span>
+    <mat-form-field style="width:150px">
+      <input matInput #period type="number">
+      <span matSuffix>cells</span>
+    </mat-form-field>
+    <span class="space"></span>
+    <button mat-raised-button class="component">Resize</button>
+  </span>
 </div>
 
 <div id="contents" class="contentsArea">
