@@ -5,9 +5,9 @@
     <button mat-raised-button class="component">Random</button>
   </span>
   <span class="componentGroup">
-    <button mat-raised-button class="component">Start</button>
-    <button mat-raised-button class="component">Stop</button>
-    <button mat-raised-button class="component">Tick</button>
+    <button mat-raised-button class="component" (click)="start()" [disabled]="this.timerObj">Start</button>
+    <button mat-raised-button class="component" (click)="stop()" [disabled]="!this.timerObj">Stop</button>
+    <button mat-raised-button class="component" (click)="tick()">Tick</button>
   </span>
   <span class="componentGroup">
     <span>Tick period:</span>
@@ -38,33 +38,8 @@
 
 <div id="contents" class="contentsArea">
   <div class="fieldsArea">
-    <div class="cellRow">
-      <div class="cell"></div>
-      <div class="cell"></div>
-      <div class="cell"></div>
-      <div class="cell"></div>
-      <div class="cell"></div>
-      <div class="cell"></div>
-      <div class="cell"></div>
-      <div class="cell"></div>
-      <div class="cell"></div>
-      <div class="cell"></div>
-      <div class="cell"></div>
-      <div class="cell"></div>
+    <div class="cellRow" *ngFor="let row of cells">
+      <div class="cell" *ngFor="let cell of row" [ngClass]="{on: cell.alived}" (click)="toggleCell(cell)"></div>
     </div>
-    <div style="display:inline-flex">
-      <div class="cell"></div>
-      <div class="cell"></div>
-      <div class="cell on"></div>
-      <div class="cell"></div>
-      <div class="cell"></div>
-      <div class="cell"></div>
-      <div class="cell"></div>
-      <div class="cell"></div>
-      <div class="cell"></div>
-      <div class="cell"></div>
-      <div class="cell"></div>
-    </div>
-
   </div>
 </div>

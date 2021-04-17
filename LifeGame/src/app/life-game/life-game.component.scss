@@ -11,7 +11,7 @@
 
 .contentsArea {
   align-items: center;
-  background-color: yellow;
+  background-color: #222266;
   display: flex;
   height: calc(100% - 20px);
   justify-content: center;
@@ -49,4 +49,5 @@
 
 .cellRow {
   height: 22px;
+  white-space: nowrap;
 }
