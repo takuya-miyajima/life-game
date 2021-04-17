@@ -35,6 +35,15 @@
   margin: 5px;
 }
 
+.inputForm {
+  width: 200px;
+}
+
+.hasChanged {
+  background-color: #FCF3CF;
+}
+
+/** セル設定 */
 .cell {
   background-color: black;
   display:inline-block;

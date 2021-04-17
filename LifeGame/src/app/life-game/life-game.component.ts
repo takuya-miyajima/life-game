@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { Cell } from '../entity/cell';
 import { timer, interval, Observable, Subscription } from 'rxjs';
+import { Form, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { CustomValidator } from '../validator/custom-validator';
 
 const NEIGHBOURS = [
   { x: -1, y: -1 },
@@ -24,25 +26,48 @@ export class LifeGameComponent implements OnInit {
   cells: Cell[][];
 
   // 計算用（順次遷移する状態を計算するため2枚用意）。キーとして1か-1を取る
-  calcCells = { };
+  calcCells = {};
   // calcCellsのどちらを参照するかを表すインデックス。1か-1のみを取る。
   cellsIndex: number;
+  // 各初期値
   size = {
     width: 100,
     height: 100
   };
   period = 100;
 
+  // フォームコントロール
+  inputPeriod = this.period;
+  inputWidth = this.size.width;
+  inputHeight = this.size.height;
+  formGroup: FormGroup;
+  periodControl: FormControl;
+  widthControl: FormControl;
+  heightControl: FormControl;
+
+  // タイマー
   timerObj: Subscription;
 
-  constructor() { }
+  constructor(private builder: FormBuilder) {
+  }
 
   ngOnInit(): void {
+    this.periodControl = new FormControl('', [CustomValidator.period]);
+    this.widthControl = new FormControl('', [CustomValidator.size]);
+    this.heightControl = new FormControl('', [CustomValidator.size]);
     this.calcCells = {};
     this.calcCells["-1"] = this.newCells();
     this.calcCells["1"] = this.newCells();
     this.cellsIndex = 1;
     this.cells = this.calcCells[String(this.cellsIndex)];
+  }
+
+  getPeriodMessage() {
+    return CustomValidator.getPeriodMessage();
+  }
+
+  getSizeMessage() {
+    return CustomValidator.getSizeMessage();
   }
 
   /**
@@ -99,10 +124,7 @@ export class LifeGameComponent implements OnInit {
     }
 
     // 現在のCellsと置き換える
-    // const oldCells = this.cells;
     this.cells = newCells;
-
-    // 古いcellsを破棄,,,は不要？（メモリリーク防止）
   }
 
   /**
@@ -135,9 +157,11 @@ export class LifeGameComponent implements OnInit {
     }
   }
 
+  /**
+   * 盤面をクリアする
+   */
   clear() {
     const currentCells = this.calcCells[this.cellsIndex];
-    // const nextCells = this.calcCells[-1 * this.cellsIndex];
 
     for (let row = 0; row < this.size.height; row++) {
       for (let col = 0; col < this.size.width; col++) {
@@ -146,9 +170,11 @@ export class LifeGameComponent implements OnInit {
     }
   }
 
+  /**
+   * 盤面全体のステータスをランダムにする
+   */
   random() {
     const currentCells = this.calcCells[this.cellsIndex];
-    // const nextCells = this.calcCells[-1 * this.cellsIndex];
 
     for (let row = 0; row < this.size.height; row++) {
       for (let col = 0; col < this.size.width; col++) {
@@ -157,4 +183,16 @@ export class LifeGameComponent implements OnInit {
     }
   }
 
+  applyPeriod() {
+    if (this.periodControl.errors.tooShort) {
+      return;
+    }
+
+    this.period = this.inputPeriod;
+
+    if (this.timerObj) {
+      this.stop();
+      this.start();
+    }
+  }
 }
