@@ -12,6 +12,7 @@ const NEIGHBOURS = [
   { x: 1, y: 0 },
   { x: 1, y: 1 }
 ];
+
 @Component({
   selector: 'app-life-game',
   templateUrl: './life-game.component.html',
@@ -19,7 +20,13 @@ const NEIGHBOURS = [
 })
 export class LifeGameComponent implements OnInit {
 
+  // 表示用
   cells: Cell[][];
+
+  // 計算用（順次遷移する状態を計算するため2枚用意）。キーとして1か-1を取る
+  calcCells = { };
+  // calcCellsのどちらを参照するかを表すインデックス。1か-1のみを取る。
+  cellsIndex: number;
   size = {
     width: 100,
     height: 100
@@ -31,7 +38,11 @@ export class LifeGameComponent implements OnInit {
   constructor() { }
 
   ngOnInit(): void {
-    this.cells = this.newCells();
+    this.calcCells = {};
+    this.calcCells["-1"] = this.newCells();
+    this.calcCells["1"] = this.newCells();
+    this.cellsIndex = 1;
+    this.cells = this.calcCells[String(this.cellsIndex)];
   }
 
   /**
@@ -76,12 +87,14 @@ export class LifeGameComponent implements OnInit {
    */
   tick() {
     // Cellsのコピーを作成
-    const newCells = this.newCells();
+    const currentCells = this.calcCells[this.cellsIndex];
+    this.cellsIndex *= -1;
+    const newCells = this.calcCells[this.cellsIndex];
 
     // neighborを元に次のON/OFFを決定、設定する
     for (let row = 0; row < this.size.height; row++) {
       for (let col = 0; col < this.size.width; col++) {
-        newCells[row][col].alived = this.aliveInNextTick(this.cells[row][col]);
+        newCells[row][col].alived = this.aliveInNextTick(currentCells[row][col]);
       }
     }
 
@@ -105,14 +118,42 @@ export class LifeGameComponent implements OnInit {
     return (aliveAmount === 3 || (cell.alived && aliveAmount === 2));
   }
 
+  /**
+   * periodごとに世代更新開始
+   */
   start() {
     this.timerObj = interval(this.period).subscribe(_ => this.tick());
   }
 
+  /**
+   * 世代更新停止
+   */
   stop() {
     if (this.timerObj) {
       this.timerObj.unsubscribe();
       this.timerObj = null;
+    }
+  }
+
+  clear() {
+    const currentCells = this.calcCells[this.cellsIndex];
+    // const nextCells = this.calcCells[-1 * this.cellsIndex];
+
+    for (let row = 0; row < this.size.height; row++) {
+      for (let col = 0; col < this.size.width; col++) {
+        currentCells[row][col].alived = false;
+      }
+    }
+  }
+
+  random() {
+    const currentCells = this.calcCells[this.cellsIndex];
+    // const nextCells = this.calcCells[-1 * this.cellsIndex];
+
+    for (let row = 0; row < this.size.height; row++) {
+      for (let col = 0; col < this.size.width; col++) {
+        currentCells[row][col].alived = (Math.random() < 0.5);
+      }
     }
   }
 
