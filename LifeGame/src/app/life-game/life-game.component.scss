@@ -1,13 +1,18 @@
 .controlArea {
+  background-color: white;
   width: 100%;
   height: 100px;
   position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10;
 }
 
 .contentsArea {
   width: 100%;
   height: 100%;
   margin-top: 100px;
+  position: relative;
   overflow: auto;
   background-color: yellow;
 }
