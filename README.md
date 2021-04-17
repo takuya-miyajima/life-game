@@ -1,2 +1,2 @@
-# life-gate
+# life-game
 simple app to play life game
