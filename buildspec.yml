@@ -15,7 +15,7 @@ phases:
 artifacts:
   files:
     - '**/*'
-  base-directory: dist/LifeGame
+  base-directory: LifeGame/dist/LifeGame
 cache:
   paths:
     - /tmp/node_modules.tar
