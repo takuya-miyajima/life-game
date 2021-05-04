@@ -127,5 +127,8 @@
       }
     }
   },
-  "defaultProject": "LifeGame"
+  "defaultProject": "LifeGame",
+  "cli": {
+    "analytics": "05ea9c7a-7255-493b-8d19-c61fe04525c3"
+  }
 }
