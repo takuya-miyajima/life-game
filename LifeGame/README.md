@@ -1,27 +1,73 @@
 # LifeGame
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 10.2.0.
+Conway's Game of Life built with Angular 22.2.2 and Angular Material 22.2.2.
 
-## Development server
+## Requirements
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
+Use Node.js 24 LTS (24.15.0 or newer; tested with 24.21.0) and npm.
+The exact development runtime is recorded in `.nvmrc`.
+TypeScript stays on 6.0.x because Angular 22 requires `>=6.0 <6.1`;
+TypeScript 7 is not yet compatible.
 
-## Code scaffolding
+## Setup and development
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+From this directory:
 
-## Build
+```sh
+npm ci
+npm start
+```
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
+Open http://localhost:4200/. Changes reload automatically.
+Click cells to toggle them, Tick to advance one generation, or Start / Stop
+to run continuously. Apply changes the interval; Resize clears the board
+and stops a running simulation. The interval must be at least 100 ms and
+each board dimension must be an integer between 10 and 500.
 
-## Running unit tests
+## Build and checks
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+```sh
+npm run lint
+npm test
+npm run build
+```
 
-## Running end-to-end tests
+Builds default to production and write deployable files directly into
+`dist/LifeGame`, including `index.html`. For a development build use
+`npm run build -- --configuration development`.
 
-Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
+Unit tests use Angular's Vitest builder with jsdom. Use `npm run test:watch`
+for watch mode.
 
-## Further help
+## Browser tests
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+Install Playwright's Chromium once, then run the end-to-end test:
+
+```sh
+npx playwright install chromium
+npm run e2e
+```
+
+On Linux CI use `npx playwright install --with-deps chromium`.
+Playwright starts and stops its own development server on port 4200.
+The test checks board interaction, validation, resizing, and automatic
+rendering without Zone.js.
+
+## Upgrade notes
+
+The app now uses standalone components, built-in template control flow,
+typed reactive forms, and Angular's default zoneless change detection.
+Timer callbacks notify change detection and subscriptions are cleaned up
+on component destruction. Angular animations, Zone.js, and the unused
+router have been removed. Karma / Jasmine, Protractor, and TSLint /
+Codelyzer have been replaced with Vitest, Playwright, and ESLint.
+
+## AWS CodeBuild
+
+The root `buildspec.yml` selects Node.js 24, installs the lockfile with
+`npm ci`, and runs lint, unit tests, and the production build. Use a
+current CodeBuild managed image supporting Node.js 24 (for example,
+Ubuntu standard:7.0 or newer) with Node.js at least 24.15.0.
+Old CodeBuild images may need to be updated in the AWS project settings.
+The artifact path remains `LifeGame/dist/LifeGame`. The npm download cache
+replaces the old archive of `node_modules`.

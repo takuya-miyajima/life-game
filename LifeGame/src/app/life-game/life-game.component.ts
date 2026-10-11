@@ -1,215 +1,160 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { interval, Subscription } from 'rxjs';
 import { Cell } from '../entity/cell';
-import { timer, interval, Observable, Subscription } from 'rxjs';
-import { Form, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { MaterialModule } from '../modules/material/material.module';
 import { CustomValidator } from '../validator/custom-validator';
 
 const NEIGHBOURS = [
-  { x: -1, y: -1 },
-  { x: -1, y: 0 },
-  { x: -1, y: 1 },
-  { x: 0, y: -1 },
-  { x: 0, y: 1 },
-  { x: 1, y: -1 },
-  { x: 1, y: 0 },
-  { x: 1, y: 1 }
+  { x: -1, y: -1 }, { x: -1, y: 0 }, { x: -1, y: 1 },
+  { x: 0, y: -1 }, { x: 0, y: 1 },
+  { x: 1, y: -1 }, { x: 1, y: 0 }, { x: 1, y: 1 }
 ];
 
 @Component({
   selector: 'app-life-game',
+  imports: [ReactiveFormsModule, MaterialModule],
   templateUrl: './life-game.component.html',
   styleUrls: ['./life-game.component.scss']
 })
-export class LifeGameComponent implements OnInit {
+export class LifeGameComponent implements OnInit, OnDestroy {
+  private readonly changeDetector = inject(ChangeDetectorRef);
 
-  // 表示用
-  cells: Cell[][];
-
-  // 計算用（順次遷移する状態を計算するため2枚用意）。キーとして1か-1を取る
-  calcCells = {};
-  // calcCellsのどちらを参照するかを表すインデックス。1か-1のみを取る。
-  cellsIndex: number;
-  // 各初期値
-  size = {
-    width: 100,
-    height: 100
-  };
+  cells: Cell[][] = [];
+  // Two buffers allow every cell to use the same generation of neighbours.
+  calcCells: Record<number, Cell[][]> = {};
+  cellsIndex = 1;
+  size = { width: 100, height: 100 };
   period = 100;
 
-  // フォームコントロール
-  inputPeriod = this.period;
-  inputWidth = this.size.width;
-  inputHeight = this.size.height;
-  formGroup: FormGroup;
-  periodControl: FormControl;
-  widthControl: FormControl;
-  heightControl: FormControl;
+  readonly periodControl = new FormControl(this.period, {
+    nonNullable: true, validators: [CustomValidator.period]
+  });
+  readonly widthControl = new FormControl(this.size.width, {
+    nonNullable: true, validators: [CustomValidator.size]
+  });
+  readonly heightControl = new FormControl(this.size.height, {
+    nonNullable: true, validators: [CustomValidator.size]
+  });
 
-  // タイマー
-  timerObj: Subscription;
-
-  constructor(private builder: FormBuilder) {
-  }
+  timerObj: Subscription | null = null;
 
   ngOnInit(): void {
-    this.periodControl = new FormControl('', [CustomValidator.period]);
-    this.widthControl = new FormControl('', [CustomValidator.size]);
-    this.heightControl = new FormControl('', [CustomValidator.size]);
-    this.calcCells = {};
-    this.calcCells["-1"] = this.newCells();
-    this.calcCells["1"] = this.newCells();
-    this.cellsIndex = 1;
-    this.cells = this.calcCells[String(this.cellsIndex)];
+    this.resetCells();
   }
 
-  getPeriodMessage() {
+  ngOnDestroy(): void {
+    this.stop();
+  }
+
+  getPeriodMessage(): string {
     return CustomValidator.getPeriodMessage();
   }
 
-  getSizeMessage() {
+  getSizeMessage(): string {
     return CustomValidator.getSizeMessage();
   }
 
-  /**
-   * 盤面初期化
-   */
+  private resetCells(): void {
+    this.calcCells = { [-1]: this.newCells(), [1]: this.newCells() };
+    this.cellsIndex = 1;
+    this.cells = this.calcCells[this.cellsIndex];
+  }
+
   newCells(): Cell[][] {
-    const cells = [];
-    for (let rowCount = 0; rowCount < this.size.height; rowCount++) {
-      const cellRow = [];
-      for (let colCount = 0; colCount < this.size.width; colCount++) {
-        const cell = new Cell(colCount, rowCount, false);
-        cellRow.push(cell);
+    const cells: Cell[][] = [];
+    for (let row = 0; row < this.size.height; row++) {
+      const cellRow: Cell[] = [];
+      for (let col = 0; col < this.size.width; col++) {
+        cellRow.push(new Cell(col, row, false));
       }
       cells.push(cellRow);
     }
-    // neighborの設定
-    for (let rowCount = 0; rowCount < this.size.height; rowCount++) {
-      const cellRow = cells[rowCount];
-      for (let colCount = 0; colCount < this.size.width; colCount++) {
-        const cell = cellRow[colCount];
 
-        NEIGHBOURS.forEach(diff => {
-          if (0 <= rowCount + diff.y && rowCount + diff.y < this.size.height && 0 <= colCount + diff.x && colCount + diff.x < this.size.width) {
-            cell.neighbors.push(cells[rowCount + diff.y][colCount + diff.x]);
+    for (let row = 0; row < this.size.height; row++) {
+      for (let col = 0; col < this.size.width; col++) {
+        for (const diff of NEIGHBOURS) {
+          const y = row + diff.y;
+          const x = col + diff.x;
+          if (y >= 0 && y < this.size.height && x >= 0 && x < this.size.width) {
+            cells[row][col].neighbors.push(cells[y][x]);
           }
-        });
+        }
       }
     }
     return cells;
   }
 
-  /**
-   * セルのON/OFF切り替え
-   * @param cell 切り替え対象セル
-   */
-  toggleCell(cell: Cell) {
+  toggleCell(cell: Cell): void {
     cell.alived = !cell.alived;
   }
 
-  /**
-   * 1ライフサイクル進める
-   */
-  tick() {
-    // Cellsのコピーを作成
+  tick(): void {
     const currentCells = this.calcCells[this.cellsIndex];
     this.cellsIndex *= -1;
-    const newCells = this.calcCells[this.cellsIndex];
-
-    // neighborを元に次のON/OFFを決定、設定する
+    const nextCells = this.calcCells[this.cellsIndex];
     for (let row = 0; row < this.size.height; row++) {
       for (let col = 0; col < this.size.width; col++) {
-        newCells[row][col].alived = this.aliveInNextTick(currentCells[row][col]);
+        nextCells[row][col].alived = this.aliveInNextTick(currentCells[row][col]);
       }
     }
-
-    // 現在のCellsと置き換える
-    this.cells = newCells;
+    this.cells = nextCells;
+    // RxJS timers must explicitly notify Angular's zoneless change detection.
+    this.changeDetector.markForCheck();
   }
 
-  /**
-   * 次の世代でAlivedかどうかの判断。標準的なライフゲームのルールに従う。
-   * @param cell 対象セル
-   * @returns 近傍Aliveセルが3ならtrue、または自身がaliveで、近傍Aliveセルが2からtrue、それ以外はfalse
-   */
   aliveInNextTick(cell: Cell): boolean {
-    if (!cell.neighbors) {
-      return false;
-    }
     const aliveAmount = cell.neighbors.filter(neighbor => neighbor.alived).length;
-    return (aliveAmount === 3 || (cell.alived && aliveAmount === 2));
+    return aliveAmount === 3 || (cell.alived && aliveAmount === 2);
   }
 
-  /**
-   * periodごとに世代更新開始
-   */
-  start() {
-    this.timerObj = interval(this.period).subscribe(_ => this.tick());
-  }
-
-  /**
-   * 世代更新停止
-   */
-  stop() {
-    if (this.timerObj) {
-      this.timerObj.unsubscribe();
-      this.timerObj = null;
+  start(): void {
+    if (!this.timerObj) {
+      this.timerObj = interval(this.period).subscribe(() => this.tick());
     }
   }
 
-  /**
-   * 盤面をクリアする
-   */
-  clear() {
-    const currentCells = this.calcCells[this.cellsIndex];
+  stop(): void {
+    this.timerObj?.unsubscribe();
+    this.timerObj = null;
+  }
 
-    for (let row = 0; row < this.size.height; row++) {
-      for (let col = 0; col < this.size.width; col++) {
-        currentCells[row][col].alived = false;
+  clear(): void {
+    for (const row of this.cells) {
+      for (const cell of row) {
+        cell.alived = false;
       }
     }
   }
 
-  /**
-   * 盤面全体のステータスをランダムにする
-   */
-  random() {
-    const currentCells = this.calcCells[this.cellsIndex];
-
-    for (let row = 0; row < this.size.height; row++) {
-      for (let col = 0; col < this.size.width; col++) {
-        currentCells[row][col].alived = (Math.random() < 0.5);
+  random(): void {
+    for (const row of this.cells) {
+      for (const cell of row) {
+        cell.alived = Math.random() < 0.5;
       }
     }
   }
 
-  applyPeriod() {
-    if (this.periodControl.errors.tooShort) {
+  applyPeriod(): void {
+    if (this.periodControl.invalid) {
+      this.periodControl.markAsTouched();
       return;
     }
-
-    this.period = this.inputPeriod;
-
+    this.period = this.periodControl.value;
     if (this.timerObj) {
       this.stop();
       this.start();
     }
   }
 
-  applySize() {
-    if (this.widthControl.errors.outOfRange || this.heightControl.errors.outOfRange) {
+  applySize(): void {
+    if (this.widthControl.invalid || this.heightControl.invalid) {
+      this.widthControl.markAsTouched();
+      this.heightControl.markAsTouched();
       return;
     }
-
-    this.size = {
-      width: this.inputWidth,
-      height: this.inputHeight
-    };
-
+    this.size = { width: this.widthControl.value, height: this.heightControl.value };
     this.stop();
-    this.calcCells[this.cellsIndex] = this.newCells();
-    this.calcCells[-1 * this.cellsIndex] = this.newCells();
-    this.cells = this.calcCells[this.cellsIndex];
-
+    this.resetCells();
   }
 }

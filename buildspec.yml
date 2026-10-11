@@ -1,22 +1,22 @@
 version: 0.2
 
 phases:
+  install:
+    runtime-versions:
+      nodejs: 24
   pre_build:
     commands:
       - cd LifeGame
-      - if [ -e /tmp/node_modules.tar ]; then tar xf /tmp/node_modules.tar; fi
-      - npm install
+      - npm ci --cache /root/.npm --prefer-offline
   build:
     commands:
+      - npm run lint
+      - npm test
       - npm run build
-  post_build:
-    commands:
-      - tar cf /tmp/node_modules.tar node_modules
 artifacts:
   files:
     - '**/*'
   base-directory: LifeGame/dist/LifeGame
 cache:
   paths:
-    - /tmp/node_modules.tar
-
+    - /root/.npm/**/*

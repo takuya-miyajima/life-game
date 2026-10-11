@@ -1,55 +1,59 @@
 <div id="controllPanel" class="controlArea">
   <p>Life Game</p>
-  <!-- Clear/Random -->
-  <span class="componentGroup">
-    <button mat-raised-button class="component" (click)="clear()" [disabled]="this.timerObj">Clear</button>
-    <button mat-raised-button class="component" (click)="random()" [disabled]="this.timerObj">Random</button>
-  </span>
-  <!-- Start/Stop/Tick -->
-  <span class="componentGroup">
-    <button mat-raised-button class="component" (click)="start()" [disabled]="this.timerObj">Start</button>
-    <button mat-raised-button class="component" (click)="stop()" [disabled]="!this.timerObj">Stop</button>
-    <button mat-raised-button class="component" (click)="tick()">Tick</button>
-  </span>
-  <!-- Period -->
-  <span class="componentGroup">
-    <span>Tick period:</span>
-    <span class="space"></span>
-    <mat-form-field class="inputForm">
-      <input matInput type="number" name="period" [(ngModel)]="inputPeriod" [formControl]="periodControl">
-      <span matSuffix>msec</span>
-      <mat-error *ngIf="periodControl.errors?.tooShort">{{ getPeriodMessage() }}</mat-error>
-    </mat-form-field>
-    <button mat-raised-button class="component" (click)="applyPeriod()"
-      [ngClass]="{hasChanged: period!=inputPeriod}">Apply</button>
-  </span>
-  <!-- Size -->
-  <span class="componentGroup">
-    <span>Size:</span>
-    <span class="space"></span>
-    <mat-form-field class="inputForm">
-      <input matInput type="number" class="numberInput" [(ngModel)]="inputWidth" [formControl]="widthControl">
-      <span matPrefix>Width</span>
-      <mat-error *ngIf="widthControl.errors?.outOfRange">{{ getSizeMessage()}}</mat-error>
-    </mat-form-field>
-    <span class="space"></span>
-    <span>X</span>
-    <span class="space"></span>
-    <mat-form-field class="inputForm">
-      <input matInput type="number" class="numberInput" [(ngModel)]="inputHeight" [formControl]="heightControl">
-      <span matPrefix>Height</span>
-      <mat-error *ngIf="heightControl.errors?.outOfRange">{{ getSizeMessage()}}</mat-error>
-    </mat-form-field>
-    <span class="space"></span>
-    <button mat-raised-button class="component" (click)="applySize()"
-      [ngClass]="{hasChanged: (size.width != inputWidth || size.height != inputHeight)}">Resize</button>
-  </span>
+  <div class="controls">
+    <span class="componentGroup">
+      <button mat-raised-button class="component" (click)="clear()" [disabled]="!!timerObj">Clear</button>
+      <button mat-raised-button class="component" (click)="random()" [disabled]="!!timerObj">Random</button>
+    </span>
+    <span class="componentGroup">
+      <button mat-raised-button class="component" (click)="start()" [disabled]="!!timerObj">Start</button>
+      <button mat-raised-button class="component" (click)="stop()" [disabled]="!timerObj">Stop</button>
+      <button mat-raised-button class="component" (click)="tick()">Tick</button>
+    </span>
+    <span class="componentGroup">
+      <mat-form-field class="inputForm">
+        <mat-label>Tick period</mat-label>
+        <input matInput type="number" name="period" min="100" [formControl]="periodControl">
+        <span matTextSuffix>msec</span>
+        @if (periodControl.hasError('tooShort')) {
+          <mat-error>{{ getPeriodMessage() }}</mat-error>
+        }
+      </mat-form-field>
+      <button mat-raised-button class="component" (click)="applyPeriod()"
+        [class.hasChanged]="period !== periodControl.value">Apply</button>
+    </span>
+    <span class="componentGroup">
+      <mat-form-field class="inputForm">
+        <mat-label>Width</mat-label>
+        <input matInput type="number" class="numberInput" min="10" max="500" step="1" [formControl]="widthControl">
+        @if (widthControl.hasError('outOfRange')) {
+          <mat-error>{{ getSizeMessage() }}</mat-error>
+        }
+      </mat-form-field>
+      <span class="space">X</span>
+      <mat-form-field class="inputForm">
+        <mat-label>Height</mat-label>
+        <input matInput type="number" class="numberInput" min="10" max="500" step="1" [formControl]="heightControl">
+        @if (heightControl.hasError('outOfRange')) {
+          <mat-error>{{ getSizeMessage() }}</mat-error>
+        }
+      </mat-form-field>
+      <button mat-raised-button class="component" (click)="applySize()"
+        [class.hasChanged]="size.width !== widthControl.value || size.height !== heightControl.value">Resize</button>
+    </span>
+  </div>
 </div>
 
 <div id="contents" class="contentsArea">
   <div class="fieldsArea">
-    <div class="cellRow" *ngFor="let row of cells">
-      <div class="cell" *ngFor="let cell of row" [ngClass]="{on: cell.alived}" (click)="toggleCell(cell)"></div>
-    </div>
+    @for (row of cells; track $index) {
+      <div class="cellRow">
+        @for (cell of row; track $index) {
+          <button type="button" class="cell" [class.on]="cell.alived" (click)="toggleCell(cell)"
+            [attr.aria-pressed]="cell.alived"
+            [attr.aria-label]="'Cell ' + cell.position.x + ', ' + cell.position.y"></button>
+        }
+      </div>
+    }
   </div>
 </div>
