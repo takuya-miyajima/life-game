@@ -4,8 +4,12 @@ Conway's Game of Life built with Angular 22.2.2 and Angular Material 22.2.2.
 
 ## Requirements
 
-Use Node.js 24 LTS (24.15.0 or newer; tested with 24.21.0) and npm.
-The exact development runtime is recorded in `.nvmrc`.
+The project's Node.js engine range accepts all 24.x versions (tested with
+24.21.0). `.nvmrc` selects the latest available Node.js 24 release rather
+than pinning a specific minor or patch version.
+Angular 22 and some dependencies still require Node.js 24.15.0 or newer;
+older 24.x versions may produce engine warnings or fail to build. Use
+24.15.0 or newer for supported development and CI environments.
 TypeScript stays on 6.0.x because Angular 22 requires `>=6.0 <6.1`;
 TypeScript 7 is not yet compatible.
 
