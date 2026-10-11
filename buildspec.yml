@@ -3,10 +3,11 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      nodejs: 22
+      nodejs: 24
   pre_build:
     commands:
       - cd LifeGame
+      - n 24.15.0
       - npm ci --cache /root/.npm --prefer-offline
   build:
     commands:
