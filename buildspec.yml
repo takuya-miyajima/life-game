@@ -7,6 +7,9 @@ phases:
   pre_build:
     commands:
       - cd LifeGame
+      - nvm install 24.15.0
+      - nvm use 24.15.0
+      - node --version
       - npm ci --cache /root/.npm --prefer-offline
   build:
     commands:
